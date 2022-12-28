@@ -1,0 +1,32 @@
+{
+    "name": "@jgtools/matchmaking",
+    "version": "1.0.0",
+    "description": "MatchMaking system for online games",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JGTools/MatchMaking.git"
+    },
+    "keywords": [
+        "javascript",
+        "typescript",
+        "matchmaking"
+    ],
+    "author": "Erik1001",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/JGTools/MatchMaking/issues"
+    },
+    "homepage": "https://github.com/JGTools/MatchMaking#readme",
+    "dependencies": {
+        "nanoid": "^4.0.0"
+    },
+    "devDependencies": {
+        "tslib": "^2.4.1"
+    }
+}
