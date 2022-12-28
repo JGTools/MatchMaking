@@ -1,26 +1,7 @@
 import { nanoid } from "nanoid";
 
-const c = {
-    "TEAM_SIZE": 5,
-    "TEAMS_PER_MATCH": 2,
-    "d": {
-        "MM_INTERVAL": 1000,
-        "MAX_DIFF_START": 0.02,
-        "INCREASE_DIFF_TIME": 60000,
-        "CLEAR_INTERVAL": 3600000,
-        "CLEAR_AFTER_QUE_TIME": 7200000
-    }
-};
-
-export interface Lobby_I {
-    id: string,
-    time: number,
-    rank: number,
-    members: number
-}
-
-const mg = (map: Map<string, Lobby_I>, key: string) => {
-    return map.get(key) || { id: "", time: 0, rank: 0, members: 0 };
+const mg = <T,>(map: Map<string, T>, key: string) => {
+    return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
 }
 
 const rem = <T,>(list: T[], f: (l: T) => boolean) => {
@@ -37,7 +18,34 @@ const rem = <T,>(list: T[], f: (l: T) => boolean) => {
     return removed;
 }
 
-export default class QueManager {
+const c = {
+    "TEAM_SIZE": 5,
+    "TEAMS_PER_MATCH": 2,
+    "d": {
+        "MM_INTERVAL": 1000,
+        "MAX_DIFF_START": 0.02,
+        "INCREASE_DIFF_TIME": 60000,
+        "CLEAR_INTERVAL": 3600000,
+        "CLEAR_AFTER_QUE_TIME": 7200000
+    }
+};
+
+export interface Group_I {
+    time: number;
+    rank: number;
+    members: number;
+}
+
+export interface Lobby_I extends Group_I {
+    id: string;
+}
+
+export interface Team_I extends Group_I {
+    lobbies: string[];
+}
+
+
+export default class MatchMaker {
     private que = new Map<string, Lobby_I>();
     constructor() {
         //TODO: pass options and override config
@@ -58,7 +66,7 @@ export default class QueManager {
         this.que.delete(id);
     }
     #matchMake() {
-        const matches = MatchMaker.createMatches(this.que);
+        const matches = Helper.createMatches(this.que);
         if (!matches || matches.length == 0)
             return;
         // removed selected lobbies from que
@@ -80,13 +88,13 @@ export default class QueManager {
     }
 }
 
-class MatchMaker {
+class Helper {
     static createMatches(lobbyQue: Map<string, Lobby_I>) {
         const teams = this.#createGroups(lobbyQue, c.TEAM_SIZE);
         if (teams.length < c.TEAMS_PER_MATCH)
             return;
 
-        const teamQue = new Map();
+        const teamQue = new Map<string, Team_I>();
         for (const t of teams) {
             const time = t.reduce((s: number, l: string) => s + mg(lobbyQue, l).time, 0) / t.length;
             const rank = t.reduce((s: number, l: string) => s + mg(lobbyQue, l).rank, 0) / t.length;
@@ -94,17 +102,17 @@ class MatchMaker {
             const lobbies = t;
             teamQue.set(nanoid(), { time, rank, members, lobbies });
         }
-        const matches = [];
+        const matches: string[][][] = [];
         for (const match of this.#createGroups(teamQue, c.TEAMS_PER_MATCH)) {
-            const m = [];
+            const m: string[][] = [];
             for (const team of match) {
-                m.push(teamQue.get(team).lobbies);
+                m.push(mg(teamQue, team).lobbies);
             }
             matches.push(m);
         }
         return matches;
     }
-    static #createGroups(que: Map<string, Lobby_I>, size: number) {
+    static #createGroups(que: Map<string, Group_I>, size: number) {
         const available = [...que.keys()];
         const groups: string[][] = [];
 
@@ -125,7 +133,7 @@ class MatchMaker {
         }
         return groups;
     }
-    static #createGroup(available: string[], que: Map<string, Lobby_I>, size: number) {
+    static #createGroup(available: string[], que: Map<string, Group_I>, size: number) {
         const group = available.splice(Math.random() * available.length, 1);
         if (!group[0])
             return null;
