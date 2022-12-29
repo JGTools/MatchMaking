@@ -24,7 +24,7 @@
     },
     "homepage": "https://github.com/JGTools/MatchMaking#readme",
     "dependencies": {
-        "@jgtools/listutils": "^1.0.0",
+        "@jgtools/listutils": "^1.0.2",
         "nanoid": "^4.0.0"
     },
     "devDependencies": {
