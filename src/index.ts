@@ -1,23 +1,11 @@
+import { remove } from "@jgtools/listutils";
 import { nanoid } from "nanoid";
 
 const mg = <T,>(map: Map<string, T>, key: string) => {
     return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
 }
 
-const rem = <T,>(list: T[], f: (l: T) => boolean) => {
-    const removed = [];
-    const nl = [];
-    for (const e of list) {
-        if (f(e))
-            removed.push(e);
-        else
-            nl.push(e)
-    }
-    list.length = 0;
-    Object.assign(list, nl);
-    return removed;
-}
-
+//TODO: fix config params
 const c = {
     "TEAM_SIZE": 5,
     "TEAMS_PER_MATCH": 2,
@@ -117,7 +105,7 @@ class Helper {
         const groups: string[][] = [];
 
         // make the full premades into groups
-        for (const lobby of rem(available, (l: string) => mg(que, l).members == size)) {
+        for (const lobby of remove(available, (l: string) => mg(que, l).members == size)) {
             groups.push([lobby]);
         }
 
@@ -128,7 +116,7 @@ class Helper {
                 continue;
             groups.push(t);
             for (const l of t) {
-                rem(available, (e: string) => e == l);
+                remove(available, (e: string) => e == l);
             }
         }
         return groups;
