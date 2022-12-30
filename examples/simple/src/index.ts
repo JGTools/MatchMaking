@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import MatchMaker, { Lobby, Match } from "../../../src";
+import MatchMaking, { Lobby, Match } from "../../../src";
 
 class MMTest {
     static run() {
@@ -17,7 +17,7 @@ class MMTest {
             CLEAR_AFTER_QUE_TIME: 7200000
         };
 
-        const mm = new MatchMaker({
+        const mm = new MatchMaking({
             onMatchesFound: (matches: Match[]) => {
                 for (const match of matches) {
                     console.log("M:", match.teams.length, match.rankDiff);

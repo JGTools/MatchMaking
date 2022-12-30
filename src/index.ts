@@ -5,9 +5,9 @@ const mg = <T,>(map: Map<string, T>, key: string) => {
     return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
 }
 
-export interface MatchMakerParams {
+export interface MatchMakingParams {
     onMatchesFound: (matches: Match[]) => void;
-    config?: MatchMakerConfig;
+    config?: MatchMakingConfig;
 };
 export interface Lobby {
     id: string;
@@ -20,7 +20,7 @@ export interface Match {
     rankDiff: number;
 }
 
-interface MatchMakerConfig {
+interface MatchMakingConfig {
     TEAM_SIZE: number,
     TEAMS_PER_MATCH: number,
     MM_INTERVAL: number,
@@ -41,8 +41,8 @@ interface Team_I extends Group_I {
     lobbies: string[];
 }
 
-export default class MatchMaker {
-    #c: MatchMakerConfig = {
+export default class MatchMaking {
+    #c: MatchMakingConfig = {
         TEAM_SIZE: 5,
         TEAMS_PER_MATCH: 2,
         MM_INTERVAL: 1000,
@@ -52,7 +52,7 @@ export default class MatchMaker {
         CLEAR_AFTER_QUE_TIME: 7200000
     };
     #que = new Map<string, Lobby_I>();
-    constructor(params: MatchMakerParams) {
+    constructor(params: MatchMakingParams) {
         if (params.config)
             this.#c = params.config;
 
@@ -85,7 +85,7 @@ export default class MatchMaker {
     #clearLobbies() {
         for (const [k, v] of this.#que.entries()) {
             if (Date.now() - v.time > this.#c.CLEAR_AFTER_QUE_TIME) {
-                this.removeFromQue(k)
+                this.removeFromQue(k);
             }
         }
     }
@@ -112,7 +112,7 @@ export default class MatchMaker {
 }
 
 class Helper {
-    static createMatches(c: MatchMakerConfig, lobbyQue: Map<string, Lobby_I>) {
+    static createMatches(c: MatchMakingConfig, lobbyQue: Map<string, Lobby_I>) {
         const teams = this.#createGroups(c, lobbyQue, c.TEAM_SIZE);
         if (teams.length < c.TEAMS_PER_MATCH)
             return;
@@ -135,7 +135,7 @@ class Helper {
         }
         return matches;
     }
-    static #createGroups(c: MatchMakerConfig, que: Map<string, Group_I>, size: number) {
+    static #createGroups(c: MatchMakingConfig, que: Map<string, Group_I>, size: number) {
         const available = [...que.keys()];
         const groups: string[][] = [];
 
@@ -154,7 +154,7 @@ class Helper {
         }
         return groups;
     }
-    static #createGroup(c: MatchMakerConfig, available: string[], que: Map<string, Group_I>, size: number) {
+    static #createGroup(c: MatchMakingConfig, available: string[], que: Map<string, Group_I>, size: number) {
         const group = available.splice(Math.random() * available.length, 1);
         if (!group[0])
             return null;
