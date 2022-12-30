@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "nanoid": "^4.0.0",
-    "@jgtools/matchmaking":"^1.0.0"
+    "@jgtools/matchmaking":"^1.0.1"
   },
   "devDependencies": {
       "tslib": "^2.4.1"
