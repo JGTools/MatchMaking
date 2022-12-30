@@ -5,10 +5,6 @@ const mg = <T,>(map: Map<string, T>, key: string) => {
     return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
 }
 
-export interface MatchMakingParams {
-    onMatchesFound: (matches: Match[]) => void;
-    config?: MatchMakingConfig;
-};
 export interface Lobby {
     id: string;
     rank: number;
@@ -52,11 +48,11 @@ export default class MatchMaking {
         CLEAR_AFTER_QUE_TIME: 7200000
     };
     #que = new Map<string, Lobby_I>();
-    constructor(params: MatchMakingParams) {
-        if (params.config)
-            this.#c = params.config;
+    constructor(onMatchesFound: (matches: Match[]) => void, config?: MatchMakingConfig) {
+        if (config)
+            this.#c = config;
 
-        setInterval(() => this.#matchMake(params.onMatchesFound), this.#c.MM_INTERVAL);
+        setInterval(() => this.#matchMake(onMatchesFound), this.#c.MM_INTERVAL);
         setInterval(() => this.#clearLobbies(), this.#c.CLEAR_INTERVAL);
     }
     addToQue(lobby: Lobby) {

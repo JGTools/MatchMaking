@@ -23,15 +23,37 @@ import MatchMaking from "@jgtools/matchmaking";
 
 ```html
 <script type="module">
-    import MatchMaking from "https://cdn.jsdelivr.net/npm/@jgtools/matchmaking@1.0.0/dist/index.min.js";
+    import MatchMaking, { Lobby, Match } from "https://cdn.jsdelivr.net/npm/@jgtools/matchmaking@1.0.0/dist/index.min.js";
     // ...
 </script>
 ```
 
 ## Usage
 
-```javascript
-import MatchMaking from "@jgtools/matchmaking";
+```typescript
+import MatchMaking, { Lobby, Match } from "@jgtools/matchmaking";
+
+const config = {
+  TEAM_SIZE: 5,
+  TEAMS_PER_MATCH: 2,
+  MM_INTERVAL: 1000,
+  MAX_DIFF_START: 0.02,
+  INCREASE_DIFF_TIME: 60000,
+  CLEAR_INTERVAL: 3600000,
+  CLEAR_AFTER_QUE_TIME: 7200000,
+};
+const onMatchesFound = (matches: Match[]) => {
+  // do something with matches that were created
+};
+const mm = new MatchMaking(onMatchesFound, config);
+
+// add lobby to matchmaking
+const lobby: Lobby = {
+  id: "123",
+  rank: 0.7,
+  members: 3,
+};
+mm.addToQue(lobby);
 ```
 
 ## License

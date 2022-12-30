@@ -25,7 +25,7 @@ class MMTest {
             console.log("Found:", matches.length);
             console.log("Lobbies left:", mm.getQue().size);
         };
-        const mm = new MatchMaking({ onMatchesFound, config });
+        const mm = new MatchMaking(onMatchesFound, config);
 
         // add lobbies to matchmaking
         while (lobbies.length > 0) {
