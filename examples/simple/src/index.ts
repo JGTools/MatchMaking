@@ -1,5 +1,5 @@
+import MatchMaking, { Lobby, Match } from "@jgtools/matchmaking";
 import { nanoid } from "nanoid";
-import MatchMaking, { Lobby, Match } from "../../../src";
 
 class MMTest {
     static run() {
