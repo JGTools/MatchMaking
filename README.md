@@ -23,7 +23,7 @@ import MatchMaking from "@jgtools/matchmaking";
 
 ```html
 <script type="module">
-    import MatchMaking, { Lobby, Match } from "https://cdn.jsdelivr.net/npm/@jgtools/matchmaking@1.0.0/dist/index.min.js";
+    import MatchMaking from "https://cdn.jsdelivr.net/npm/@jgtools/matchmaking@1.0.1/dist/index.min.js";
     // ...
 </script>
 ```

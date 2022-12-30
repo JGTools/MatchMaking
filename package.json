@@ -1,6 +1,6 @@
 {
     "name": "@jgtools/matchmaking",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "MatchMaking system for online games",
     "type": "module",
     "main": "dist/index.js",
