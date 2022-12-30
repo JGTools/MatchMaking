@@ -16,17 +16,16 @@ class MMTest {
             CLEAR_INTERVAL: 3600000,
             CLEAR_AFTER_QUE_TIME: 7200000
         };
+        const onMatchesFound = (matches: Match[]) => {
+            // do something with matches that were created
 
-        const mm = new MatchMaking({
-            onMatchesFound: (matches: Match[]) => {
-                for (const match of matches) {
-                    console.log("M:", match.teams.length, match.rankDiff);
-                }
-                console.log("Found:", matches.length);
-                console.log("Q:", mm.getQue().size);
-            },
-            config
-        });
+            for (const match of matches) {
+                console.log("M:", match.teams.length, match.rankDiff);
+            }
+            console.log("Found:", matches.length);
+            console.log("Lobbies left:", mm.getQue().size);
+        };
+        const mm = new MatchMaking({ onMatchesFound, config });
 
         // add lobbies to matchmaking
         while (lobbies.length > 0) {
@@ -36,6 +35,20 @@ class MMTest {
         }
         // remove lobby with id "1" from matchmaking
         mm.removeFromQue("1");
+
+        // set new config, use this from admin tools
+        const newConfig = {
+            TEAM_SIZE: 5,
+            TEAMS_PER_MATCH: 2,
+            MM_INTERVAL: 1000,
+            MAX_DIFF_START: 0.02,
+            INCREASE_DIFF_TIME: 6000,
+            CLEAR_INTERVAL: 3600000,
+            CLEAR_AFTER_QUE_TIME: 7200000
+        };
+        mm.setConfig(newConfig);
+        //get config
+        mm.getConfig();
     }
     static #getTestLobbies() {
         const TEST_USERS = 100;

@@ -71,8 +71,14 @@ export default class MatchMaking {
     removeFromQue(id: string) {
         this.#que.delete(id);
     }
+    setConfig(config: MatchMakingConfig) {
+        this.#c = config;
+    }
     getQue() {
         return this.#que;
+    }
+    getConfig() {
+        return this.#c;
     }
     #matchMake(onMatchesFound: (matches: Match[]) => void) {
         const matches = Helper.createMatches(this.#c, this.#que);
