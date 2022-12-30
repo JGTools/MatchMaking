@@ -5,80 +5,115 @@ const mg = <T,>(map: Map<string, T>, key: string) => {
     return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
 }
 
-//TODO: fix config params
-const c = {
-    "TEAM_SIZE": 5,
-    "TEAMS_PER_MATCH": 2,
-    "d": {
-        "MM_INTERVAL": 1000,
-        "MAX_DIFF_START": 0.02,
-        "INCREASE_DIFF_TIME": 60000,
-        "CLEAR_INTERVAL": 3600000,
-        "CLEAR_AFTER_QUE_TIME": 7200000
-    }
+export interface MatchMakerParams {
+    onMatchesFound: (matches: Match[]) => void;
+    config?: MatchMakerConfig;
 };
+export interface Lobby {
+    id: string;
+    rank: number;
+    members: number;
+};
+export type Team = string[];
+export interface Match {
+    teams: Team[];
+    rankDiff: number;
+}
 
-export interface Group_I {
+interface MatchMakerConfig {
+    TEAM_SIZE: number,
+    TEAMS_PER_MATCH: number,
+    MM_INTERVAL: number,
+    MAX_DIFF_START: number,
+    INCREASE_DIFF_TIME: number,
+    CLEAR_INTERVAL: number,
+    CLEAR_AFTER_QUE_TIME: number
+}
+interface Group_I {
     time: number;
     rank: number;
     members: number;
 }
-
-export interface Lobby_I extends Group_I {
+interface Lobby_I extends Group_I {
     id: string;
 }
-
-export interface Team_I extends Group_I {
+interface Team_I extends Group_I {
     lobbies: string[];
 }
 
-
 export default class MatchMaker {
-    private que = new Map<string, Lobby_I>();
-    constructor() {
-        //TODO: pass options and override config
+    #c: MatchMakerConfig = {
+        TEAM_SIZE: 5,
+        TEAMS_PER_MATCH: 2,
+        MM_INTERVAL: 1000,
+        MAX_DIFF_START: 0.02,
+        INCREASE_DIFF_TIME: 60000,
+        CLEAR_INTERVAL: 3600000,
+        CLEAR_AFTER_QUE_TIME: 7200000
+    };
+    #que = new Map<string, Lobby_I>();
+    constructor(params: MatchMakerParams) {
+        if (params.config)
+            this.#c = params.config;
 
-        setInterval(() => this.#matchMake(), c.d.MM_INTERVAL);
-        setInterval(() => this.#clearLobbies(), c.d.CLEAR_INTERVAL);
+        setInterval(() => this.#matchMake(params.onMatchesFound), this.#c.MM_INTERVAL);
+        setInterval(() => this.#clearLobbies(), this.#c.CLEAR_INTERVAL);
     }
-    addToQue(lobby: Lobby_I) {
-        const t = {
+    addToQue(lobby: Lobby) {
+        const l = {
             id: lobby.id,
             time: Date.now(),
             rank: lobby.rank,
             members: lobby.members
         };
-        this.que.set(lobby.id, t);
+        this.#que.set(lobby.id, l);
     }
     removeFromQue(id: string) {
-        this.que.delete(id);
+        this.#que.delete(id);
     }
-    #matchMake() {
-        const matches = Helper.createMatches(this.que);
+    getQue() {
+        return this.#que;
+    }
+    #matchMake(onMatchesFound: (matches: Match[]) => void) {
+        const matches = Helper.createMatches(this.#c, this.#que);
         if (!matches || matches.length == 0)
             return;
-        // removed selected lobbies from que
+        this.#calculateRankDiff(matches);
+        this.#removeMatchesFromQue(matches);
+        onMatchesFound(matches);
+    }
+    #clearLobbies() {
+        for (const [k, v] of this.#que.entries()) {
+            if (Date.now() - v.time > this.#c.CLEAR_AFTER_QUE_TIME) {
+                this.removeFromQue(k)
+            }
+        }
+    }
+    #removeMatchesFromQue(matches: Match[]) {
         for (const match of matches) {
-            for (const team of match) {
+            for (const team of match.teams) {
                 for (const l of team) {
                     this.removeFromQue(l);
                 }
             }
         }
-        // return promise
     }
-    #clearLobbies() {
-        for (const [k, v] of this.que.entries()) {
-            if (Date.now() - v.time > c.d.CLEAR_AFTER_QUE_TIME) {
-                this.removeFromQue(k)
+    #calculateRankDiff(matches: Match[]) {
+        for (const match of matches) {
+            const ranks = [];
+            for (const team of match.teams) {
+                const rank = team.reduce((s, l) => s + (this.#que.get(l)?.rank || 0), 0) / team.length;
+                ranks.push(rank);
             }
+            const avg = ranks.reduce((s, r) => s + r, 0) / ranks.length;
+            match.rankDiff = ranks.reduce((s, r) => s + Math.abs(r - avg), 0) / ranks.length;
         }
     }
 }
 
 class Helper {
-    static createMatches(lobbyQue: Map<string, Lobby_I>) {
-        const teams = this.#createGroups(lobbyQue, c.TEAM_SIZE);
+    static createMatches(c: MatchMakerConfig, lobbyQue: Map<string, Lobby_I>) {
+        const teams = this.#createGroups(c, lobbyQue, c.TEAM_SIZE);
         if (teams.length < c.TEAMS_PER_MATCH)
             return;
 
@@ -90,28 +125,26 @@ class Helper {
             const lobbies = t;
             teamQue.set(nanoid(), { time, rank, members, lobbies });
         }
-        const matches: string[][][] = [];
-        for (const match of this.#createGroups(teamQue, c.TEAMS_PER_MATCH)) {
-            const m: string[][] = [];
+        const matches: Match[] = [];
+        for (const match of this.#createGroups(c, teamQue, c.TEAMS_PER_MATCH)) {
+            const m: Match = { teams: [], rankDiff: 0 };
             for (const team of match) {
-                m.push(mg(teamQue, team).lobbies);
+                m.teams.push(mg(teamQue, team).lobbies);
             }
             matches.push(m);
         }
         return matches;
     }
-    static #createGroups(que: Map<string, Group_I>, size: number) {
+    static #createGroups(c: MatchMakerConfig, que: Map<string, Group_I>, size: number) {
         const available = [...que.keys()];
         const groups: string[][] = [];
 
-        // make the full premades into groups
         for (const lobby of remove(available, (l: string) => mg(que, l).members == size)) {
             groups.push([lobby]);
         }
 
-        // make the full premades into groups
         while (available.length > 0) {
-            const t = this.#createGroup(available, que, size);
+            const t = this.#createGroup(c, available, que, size);
             if (!t)
                 continue;
             groups.push(t);
@@ -121,7 +154,7 @@ class Helper {
         }
         return groups;
     }
-    static #createGroup(available: string[], que: Map<string, Group_I>, size: number) {
+    static #createGroup(c: MatchMakerConfig, available: string[], que: Map<string, Group_I>, size: number) {
         const group = available.splice(Math.random() * available.length, 1);
         if (!group[0])
             return null;
@@ -134,7 +167,7 @@ class Helper {
 
             const time = group.reduce((s, l) => s + Date.now() - mg(que, l).time, 0) / group.length;
             const rank = group.reduce((s, l) => s + mg(que, l).rank, 0) / group.length;
-            if (Math.abs(l.rank - rank) > c.d.MAX_DIFF_START + time / c.d.INCREASE_DIFF_TIME)
+            if (Math.abs(l.rank - rank) > c.MAX_DIFF_START + time / c.INCREASE_DIFF_TIME)
                 continue;
 
             group.push(lid);
