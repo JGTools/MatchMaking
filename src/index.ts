@@ -1,5 +1,4 @@
 import { remove } from "@jgtools/listutils";
-import { nanoid } from "nanoid";
 
 const mg = <T,>(map: Map<string, T>, key: string) => {
     return map.get(key) || { id: "", time: 0, rank: 0, members: 0, lobbies: [] };
@@ -125,7 +124,7 @@ class Helper {
             const rank = t.reduce((s: number, l: string) => s + mg(lobbyQue, l).rank, 0) / t.length;
             const members = 1;
             const lobbies = t;
-            teamQue.set(nanoid(), { time, rank, members, lobbies });
+            teamQue.set(crypto.randomUUID(), { time, rank, members, lobbies });
         }
         const matches: Match[] = [];
         for (const match of this.#createGroups(c, teamQue, c.TEAMS_PER_MATCH)) {

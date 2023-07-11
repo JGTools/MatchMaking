@@ -1,5 +1,4 @@
 import MatchMaking, { Lobby, Match } from "@jgtools/matchmaking";
-import { nanoid } from "nanoid";
 
 class MMTest {
     static run() {
@@ -73,7 +72,7 @@ class MMTest {
                 i++;
             }
 
-            const id = nanoid();
+            const id = crypto.randomUUID();
             const rank = l.reduce((s, u) => s + u.rank, 0) / l.length;
             const members = l.length;
             lobbies.push({ id, rank, members });

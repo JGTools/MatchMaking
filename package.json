@@ -1,6 +1,6 @@
 {
     "name": "@jgtools/matchmaking",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "MatchMaking system for online games",
     "type": "module",
     "main": "dist/index.js",
@@ -24,8 +24,7 @@
     },
     "homepage": "https://github.com/JGTools/MatchMaking#readme",
     "dependencies": {
-        "@jgtools/listutils": "^1.0.2",
-        "nanoid": "^4.0.0"
+        "@jgtools/listutils": "^1.0.5"
     },
     "devDependencies": {
         "tslib": "^2.4.1"
